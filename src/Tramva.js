@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 const defaultHDRTextureURL = new URL('./HDR/MR_INT-003_Kitchen_Pierre.hdr', import.meta.url);
 
-export default class A3D extends THREE.EventDispatcher {
+export default class Tramva extends THREE.EventDispatcher {
   toneMappingExposure = 0.8;
   canDeselect = true;
   transformControlMode = 'translate';
@@ -25,31 +25,6 @@ export default class A3D extends THREE.EventDispatcher {
     this.raycaster = new THREE.Raycaster();
 
     this._setup();
-  }
-
-  addChild(child) {
-    this.scene.add(child.mesh);
-    this.objects.push(child);
-    this.renderAll();
-
-    child.mesh.userData.object = child;
-
-    child.set({
-      scene: this.scene,
-      renderer: this.renderer,
-      camera: this.camera
-    });
-
-    return this;
-  }
-
-  removeChild(child) {
-    this.discardActiveObject();
-    this.scene.remove(child.mesh);
-    this.objects = this.objects.filter((obj) => obj !== child);
-    this.renderAll();
-
-    return this;
   }
 
   /**
@@ -78,15 +53,22 @@ export default class A3D extends THREE.EventDispatcher {
   _setUpCamera() {
     const wrapperBounds = this.wrapperEl?.getBoundingClientRect();
     this.camera = new THREE.PerspectiveCamera(
-      75,
+      10,
       wrapperBounds.width / wrapperBounds.height,
       0.1,
       1000
     );
 
-    this.camera.lookAt(0, 0, 0);
+    // this.camera = new THREE.OrthographicCamera(
+    //   wrapperBounds.width / -2, // left
+    //   wrapperBounds.width / 2, // right
+    //   wrapperBounds.height / 2, // top
+    //   wrapperBounds.height / -2, // bottom
+    //   0.1, // near
+    //   1000 // far
+    // );
 
-    this.setCameraPosition(2.5, 2, 5);
+    this.setCameraPosition(0, 0, 100);
     this.setCameraAngle(-0.291, 0.376, 0.109);
   }
 
@@ -127,6 +109,11 @@ export default class A3D extends THREE.EventDispatcher {
       canvas: this.canvasEl || document.createElement('canvas')
     });
 
+    if (!this.canvasEl) {
+      this.wrapperEl.appendChild(this.renderer.domElement);
+      this.canvasEl = this.renderer.domElement;
+    }
+
     // Set the clear color to transparent
     if (this.background) {
       this.renderer.setClearColor(this.background, 0);
@@ -162,6 +149,7 @@ export default class A3D extends THREE.EventDispatcher {
     orbitControl.zoomSpeed = 4;
     orbitControl.zoomToCursor = true;
     orbitControl.panSpeed = 2;
+    // orbitControl.enableRotate = false;
 
     orbitControl.update();
 
@@ -181,14 +169,14 @@ export default class A3D extends THREE.EventDispatcher {
       this.renderAll();
     };
 
-    this._loadingManager.onProgress = (_, index, total) => {
-      console.info('loading', index, 'of', total);
-    };
+    // this._loadingManager.onProgress = (_, index, total) => {
+    //   console.info('loading', index, 'of', total);
+    // };
 
-    this._loadingManager.onLoad = () => {
-      console.info('loaded all');
-      this.renderAll();
-    };
+    // this._loadingManager.onLoad = () => {
+    //   console.info('loaded all');
+    //   this.renderAll();
+    // };
 
     // this.wrapperEl.addEventListener('pointermove', this._onPointerMove);
     this.wrapperEl.addEventListener('pointerdown', this._onClick);
@@ -203,8 +191,32 @@ export default class A3D extends THREE.EventDispatcher {
     });
   }
 
+  addChild(child) {
+    this.scene.add(child.mesh);
+    this.objects.push(child);
+    this.renderAll();
+
+    child.mesh.userData.object = child;
+
+    child.set({
+      scene: this.scene,
+      renderer: this.renderer,
+      camera: this.camera
+    });
+
+    return this;
+  }
+
+  removeChild(child) {
+    this.discardActiveObject();
+    this.scene.remove(child.mesh);
+    this.objects = this.objects.filter((obj) => obj !== child);
+    this.renderAll();
+
+    return this;
+  }
+
   _onPointerMove = (event) => {
-    if (event.target?.id !== 'artboard-studio-3d-canvas') return;
     event.preventDefault();
     const wrapperBounds = this.wrapperEl?.getBoundingClientRect();
 
@@ -234,7 +246,6 @@ export default class A3D extends THREE.EventDispatcher {
 
   _onClick = (event) => {
     if (event.button !== 0) return;
-    if (event.target?.id !== 'artboard-studio-3d-canvas') return;
 
     event.preventDefault();
     const wrapperBounds = this.wrapperEl?.getBoundingClientRect();

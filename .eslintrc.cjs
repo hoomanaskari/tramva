@@ -9,6 +9,11 @@ module.exports = {
       classes: true
     }
   },
+  rules: {
+    'no-unused-vars': 'warn',
+    'no-undef': 'error',
+    'semi': 'warn',
+  },
   env: {
     es6: true,
     browser: true,
