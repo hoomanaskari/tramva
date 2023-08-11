@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+// import { DragControls } from 'three/addons/controls/DragControls.js';
 
 const defaultHDRTextureURL = new URL('./HDR/MR_INT-003_Kitchen_Pierre.hdr', import.meta.url);
 
@@ -11,6 +12,9 @@ export default class Tramva extends THREE.EventDispatcher {
   canDeselect = true;
   transformControlMode = 'translate';
   objects = [];
+  FOV = 20;
+  near = 0.1;
+  far = 1000;
 
   constructor(options = {}) {
     super();
@@ -53,10 +57,10 @@ export default class Tramva extends THREE.EventDispatcher {
   _setUpCamera() {
     const wrapperBounds = this.wrapperEl?.getBoundingClientRect();
     this.camera = new THREE.PerspectiveCamera(
-      10,
+      this.FOV,
       wrapperBounds.width / wrapperBounds.height,
-      0.1,
-      1000
+      this.near,
+      this.far
     );
 
     // this.camera = new THREE.OrthographicCamera(
@@ -64,8 +68,8 @@ export default class Tramva extends THREE.EventDispatcher {
     //   wrapperBounds.width / 2, // right
     //   wrapperBounds.height / 2, // top
     //   wrapperBounds.height / -2, // bottom
-    //   0.1, // near
-    //   1000 // far
+    //   this.near,
+    //   this.far
     // );
 
     this.setCameraPosition(0, 0, 100);
@@ -136,6 +140,15 @@ export default class Tramva extends THREE.EventDispatcher {
    */
   _setUpControls() {
     this._setUpOrbitControls();
+
+    // this.dragControls = new DragControls([], this.camera, this.renderer.domElement);
+    // this.dragControls.addEventListener('drag', this.renderAll);
+    // this.dragControls.addEventListener('dragstart', () => {
+    //   this.orbitControl.enabled = false;
+    // });
+    // this.dragControls.addEventListener('dragend', () => {
+    //   this.orbitControl.enabled = true;
+    // });
   }
 
   /**
@@ -149,6 +162,10 @@ export default class Tramva extends THREE.EventDispatcher {
     orbitControl.zoomSpeed = 4;
     orbitControl.zoomToCursor = true;
     orbitControl.panSpeed = 2;
+    orbitControl.minPolarAngle = -Math.PI;
+    orbitControl.maxPolarAngle = Math.PI;
+    orbitControl.minAzimuthAngle = -Math.PI;
+    orbitControl.maxAzimuthAngle = Math.PI;
     // orbitControl.enableRotate = false;
 
     orbitControl.update();
@@ -179,7 +196,8 @@ export default class Tramva extends THREE.EventDispatcher {
     // };
 
     // this.wrapperEl.addEventListener('pointermove', this._onPointerMove);
-    this.wrapperEl.addEventListener('pointerdown', this._onClick);
+    // this.wrapperEl.addEventListener('pointerdown', this._onClick);
+
     window.addEventListener('keydown', (event) => {
       if (event.code === 'Escape') {
         this.discardActiveObject();
@@ -203,6 +221,8 @@ export default class Tramva extends THREE.EventDispatcher {
       renderer: this.renderer,
       camera: this.camera
     });
+
+    this.dragControls?.getObjects().push(child.mesh);
 
     return this;
   }
