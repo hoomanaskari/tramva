@@ -196,7 +196,7 @@ export default class Tramva extends THREE.EventDispatcher {
     // };
 
     // this.wrapperEl.addEventListener('pointermove', this._onPointerMove);
-    // this.wrapperEl.addEventListener('pointerdown', this._onClick);
+    this.wrapperEl.addEventListener('pointerdown', this._onClick);
 
     window.addEventListener('keydown', (event) => {
       if (event.code === 'Escape') {
